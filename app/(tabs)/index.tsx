@@ -38,6 +38,7 @@ export default function CalculatorScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
+    backgroundColor: '#374151',
   },
   gradient: {
     flex: 1,

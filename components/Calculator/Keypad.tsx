@@ -91,19 +91,19 @@ export default function Keypad({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: 20,
-    paddingBottom: 20,
+    paddingHorizontal: 2,
+    paddingBottom: 10,
+  
   },
   row: {
     flexDirection: 'row',
     flex: 1,
     marginBottom: 12,
-    justifyContent: 'space-around',
     alignItems: 'center', 
   },
   buttonContainer: {
     flex: 1,
-    marginHorizontal: 6,
+    marginHorizontal: 2,
   },
   wideButtonContainer: {
     flex: 2,

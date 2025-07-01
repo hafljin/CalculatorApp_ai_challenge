@@ -51,6 +51,59 @@ export const UNITS: Record<ConversionCategory, Unit[]> = {
   ],
 };
 
+// 長さの変換定義
+export const LENGTH_CONVERSIONS = [
+  { from: 'm', to: 'cm', factor: 100 },
+  { from: 'cm', to: 'm', factor: 0.01 },
+  { from: 'km', to: 'm', factor: 1000 },
+  { from: 'm', to: 'km', factor: 0.001 },
+  { from: 'inch', to: 'cm', factor: 2.54 },
+  { from: 'cm', to: 'inch', factor: 1 / 2.54 },
+  { from: 'm', to: 'inch', factor: 39.3701 },
+  { from: 'inch', to: 'm', factor: 0.0254 },
+  { from: 'ft', to: 'm', factor: 0.3048 },
+  { from: 'm', to: 'ft', factor: 3.28084 },
+  { from: 'yd', to: 'm', factor: 0.9144 },
+  { from: 'm', to: 'yd', factor: 1.09361 },
+  { from: 'mile', to: 'm', factor: 1609.34 },
+  { from: 'm', to: 'mile', factor: 1 / 1609.34 },
+];
+
+// 重さの変換定義
+export const WEIGHT_CONVERSIONS = [
+  { from: 'kg', to: 'g', factor: 1000 },
+  { from: 'g', to: 'kg', factor: 0.001 },
+  { from: 'mg', to: 'g', factor: 0.001 },
+  { from: 'g', to: 'mg', factor: 1000 },
+  { from: 'kg', to: 'mg', factor: 1000000 },
+  { from: 'mg', to: 'kg', factor: 0.000001 },
+  { from: 'kg', to: 'lb', factor: 2.20462 },
+  { from: 'lb', to: 'kg', factor: 0.453592 },
+  { from: 'kg', to: 'oz', factor: 35.274 },
+  { from: 'oz', to: 'kg', factor: 0.0283495 },
+  { from: 'g', to: 'lb', factor: 0.00220462 },
+  { from: 'lb', to: 'g', factor: 453.592 },
+  { from: 'g', to: 'oz', factor: 0.035274 },
+  { from: 'oz', to: 'g', factor: 28.3495 },
+  { from: 'kg', to: 't', factor: 0.001 },
+  { from: 't', to: 'kg', factor: 1000 },
+  { from: 'lb', to: 'oz', factor: 16 },
+  { from: 'oz', to: 'lb', factor: 1 / 16 },
+];
+
+// 温度の変換定義
+export const TEMPERATURE_CONVERSIONS = [
+  // Celsius to Fahrenheit
+  { from: '°C', to: '°F', convert: (v: number) => v * 9 / 5 + 32 },
+  { from: '°F', to: '°C', convert: (v: number) => (v - 32) * 5 / 9 },
+  // Celsius to Kelvin
+  { from: '°C', to: 'K', convert: (v: number) => v + 273.15 },
+  { from: 'K', to: '°C', convert: (v: number) => v - 273.15 },
+  // Fahrenheit to Kelvin
+  { from: '°F', to: 'K', convert: (v: number) => (v - 32) * 5 / 9 + 273.15 },
+  { from: 'K', to: '°F', convert: (v: number) => (v - 273.15) * 9 / 5 + 32 },
+];
+
 // 変換レート定義
 const CONVERSION_RATES: ConversionRate[] = [
   // 長さの変換
@@ -124,46 +177,38 @@ const generateReverseRates = (): ConversionRate[] => {
 
 const ALL_CONVERSION_RATES = [...CONVERSION_RATES, ...generateReverseRates()];
 
-// 単位変換関数
-export const convertUnit = (value: number, fromUnit: string, toUnit: string): number => {
-  if (fromUnit === toUnit) {
-    return value;
-  }
-  
-  const conversion: ConversionRate | undefined = ALL_CONVERSION_RATES.find(
-    (rate: ConversionRate) => rate.fromUnit === fromUnit && rate.toUnit === toUnit
-  );
-  
-  if (!conversion) {
-    throw new Error(`変換レートが見つかりません: ${fromUnit} → ${toUnit}`);
-  }
-  
-  if (conversion.offset !== undefined) {
-    return value * conversion.rate + conversion.offset;
-  }
-  
-  return value * conversion.rate;
-};
+// 変換関数の修正
+export function convertUnit(value: number, fromUnit: string, toUnit: string): number {
+  if (fromUnit === toUnit) return value;
+
+  // 長さ
+  const lengthConv = LENGTH_CONVERSIONS.find(c => c.from === fromUnit && c.to === toUnit);
+  if (lengthConv) return value * lengthConv.factor;
+
+  // 重さ
+  const weightConv = WEIGHT_CONVERSIONS.find(c => c.from === fromUnit && c.to === toUnit);
+  if (weightConv) return value * weightConv.factor;
+
+  // 温度
+  const tempConv = TEMPERATURE_CONVERSIONS.find(c => c.from === fromUnit && c.to === toUnit);
+  if (tempConv && tempConv.convert) return tempConv.convert(value);
+
+  throw new Error(`変換レートが見つかりません: ${fromUnit} → ${toUnit}`);
+}
 
 // 入力値の検証
 export const validateInput = (value: string): boolean => {
-  if (value === '' || value === '-') {
-    return true;
-  }
-  
-  const num = parseFloat(value);
-  return !isNaN(num) && isFinite(num);
+  if (value === '') return false;
+  return !isNaN(parseFloat(value)) && isFinite(parseFloat(value));
 };
 
 // 数値のフォーマット
 export const formatNumber = (num: number): string => {
-  if (Math.abs(num) < 0.000001 || Math.abs(num) > 999999999) {
+  if (num === 0) return '0';
+  if (num.toString().length > 12) {
     return num.toExponential(6);
   }
-  
-  // 小数点以下6桁まで表示
-  const rounded = Math.round(num * 1000000) / 1000000;
-  return rounded.toString();
+  return num.toString();
 };
 
 // カテゴリの日本語名

@@ -1,13 +1,8 @@
 import { useEffect } from 'react';
 
-declare global {
-  interface Window {
-    frameworkReady?: () => void;
-  }
-}
-
 export function useFrameworkReady() {
   useEffect(() => {
-    window.frameworkReady?.();
-  });
+    // React Nativeではwindow.frameworkReadyは存在しないため、何もしない
+    // このフックは将来の拡張のために残しておく
+  }, []);
 }
